@@ -7,6 +7,7 @@ class User(AbstractUser):
         ('employee', 'Сотрудник'),
     ]
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='employee')
+    email = models.EmailField(unique=True)  # ← Добавь эту строку!
 
     def __str__(self):
         return self.email

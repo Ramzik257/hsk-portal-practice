@@ -8,7 +8,13 @@ class LoginView(APIView):
     def post(self, request):
         email = request.data.get('email')
         password = request.data.get('password')
-        user = authenticate(email=email, password=password)
+
+        if not email:
+            return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+       
+        user = authenticate(username=email, password=password)
+
         if user is not None:
             refresh = RefreshToken.for_user(user)
             return Response({
