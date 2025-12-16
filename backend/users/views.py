@@ -6,13 +6,16 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 class LoginView(APIView):
     def post(self, request):
+        print("[DEBUG] Полученные данные:", request.data)
         email = request.data.get('email')
         password = request.data.get('password')
-
+        print(f"[DEBUG] Извлечено: email={email}, password={password is not None}")
+        
         if not email:
-            return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Email is required'}, status=400)
 
         user = authenticate(email=email, password=password)
+     
 
         if user is not None:
             refresh = RefreshToken.for_user(user)

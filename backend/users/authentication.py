@@ -1,27 +1,31 @@
-# backend/users/authentication.py
-
-import logging
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 
-logger = logging.getLogger(__name__)
 User = get_user_model()
 
 class EmailBackend(ModelBackend):
     def authenticate(self, request, username=None, password=None, **kwargs):
-        logger.info(f"Trying to authenticate: {username}")
+        print(f"[DEBUG] authenticate вызван с username={username}, password={password is not None}")
+        
         if not username:
+            print("[DEBUG] username пустой")
             return None
+            
         try:
             user = User.objects.get(Q(email=username) | Q(username=username))
-            logger.info(f"User found: {user.email}")
+            print(f"[DEBUG] Пользователь найден: {user.email}, активен: {user.is_active}")
         except User.DoesNotExist:
-            logger.error("User not found")
+            print("[DEBUG] Пользователь не найден")
             return None
 
-        if user.check_password(password) and self.user_can_authenticate(user):
-            logger.info("Authentication successful")
-            return user
-        logger.error("Password mismatch or user inactive")
-        return None
+        if not user.check_password(password):
+            print("[DEBUG] Пароль неверный")
+            return None
+
+        if not self.user_can_authenticate(user):
+            print("[DEBUG] Пользователь не может аутентифицироваться (не активен)")
+            return None
+
+        print("[DEBUG] Аутентификация успешна!")
+        return user
