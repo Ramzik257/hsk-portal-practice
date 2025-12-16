@@ -22,7 +22,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
-    'users',
+    'users.apps.UsersConfig',
     'tasks',
     'news',
 ]
@@ -111,7 +111,7 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,
     'UPDATE_LAST_LOGIN': False,
     'ALGORITHM': 'HS256',
-    'SIGNING_KEY': os.getenv('JWT_SECRET_KEY', 'secret_key_for_jwt'),
+    'SIGNING_KEY': 'your-secret-jwt-key-here',  # ← Должен быть!
     'VERIFYING_KEY': None,
     'AUDIENCE': None,
     'ISSUER': None,
@@ -137,3 +137,19 @@ AUTHENTICATION_BACKENDS = [
     'users.authentication.EmailBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'users.authentication': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+    },
+}

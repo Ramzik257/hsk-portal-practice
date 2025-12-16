@@ -1,7 +1,7 @@
 from django.contrib.auth import authenticate
-from rest_framework import status
-from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 
 class LoginView(APIView):
@@ -12,8 +12,7 @@ class LoginView(APIView):
         if not email:
             return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
 
-       
-        user = authenticate(username=email, password=password)
+        user = authenticate(email=email, password=password)
 
         if user is not None:
             refresh = RefreshToken.for_user(user)
