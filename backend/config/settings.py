@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 
-# Подключаем PyMySQL
+# Подключаем PyMySQL (для MySQL на Windows)
 import pymysql
 pymysql.install_as_MySQLdb()
 
@@ -13,6 +13,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'your_secret_key_here')
 DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
+# ---------- CORS ----------
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -20,14 +21,21 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # Сторонние
     'rest_framework',
     'rest_framework_simplejwt',
-    'users.apps.UsersConfig',
+    'corsheaders',  # ← CORS
+
+    # Наши приложения
+    'users',
     'tasks',
     'news',
 ]
 
+# ---------- CORS Middleware (обязательно первым!) ----------
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # ← ДОЛЖЕН БЫТЬ ПЕРВЫМ
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -57,6 +65,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
+# ---------- DATABASE ----------
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -72,38 +81,33 @@ DATABASES = {
     }
 }
 
+# ---------- PASSWORD VALIDATION ----------
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
+# ---------- INTERNATIONALIZATION ----------
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
+# ---------- STATIC FILES ----------
 STATIC_URL = '/static/'
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# ---------- REST FRAMEWORK ----------
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
 }
 
+# ---------- JWT ----------
 from datetime import timedelta
-
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
@@ -111,7 +115,7 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,
     'UPDATE_LAST_LOGIN': False,
     'ALGORITHM': 'HS256',
-    'SIGNING_KEY': 'your-secret-jwt-key-here',  # ← Должен быть!
+    'SIGNING_KEY': os.getenv('JWT_SECRET_KEY', 'secret_key_for_jwt'),
     'VERIFYING_KEY': None,
     'AUDIENCE': None,
     'ISSUER': None,
@@ -126,18 +130,26 @@ SIMPLE_JWT = {
     'TOKEN_TYPE_CLAIM': 'token_type',
     'TOKEN_USER_CLASS': 'rest_framework_simplejwt.models.TokenUser',
     'JTI_CLAIM': 'jti',
-    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
-    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
-    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 
+# ---------- CUSTOM USER ----------
 AUTH_USER_MODEL = 'users.User'
 
+# ---------- AUTHENTICATION BACKENDS ----------
 AUTHENTICATION_BACKENDS = [
     'users.authentication.EmailBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
 
+# ---------- CORS SETTINGS ----------
+CORS_ALLOW_ALL_ORIGINS = True  # Только для разработки!
+# Для продакшена замени на:
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:3000",
+#     "http://127.0.0.1:3000",
+# ]
+
+# ---------- LOGGING ----------
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -146,10 +158,7 @@ LOGGING = {
             'class': 'logging.StreamHandler',
         },
     },
-    'loggers': {
-        'users.authentication': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-        },
+    'root': {
+        'handlers': ['console'],
     },
 }
