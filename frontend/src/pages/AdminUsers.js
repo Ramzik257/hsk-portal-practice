@@ -7,7 +7,7 @@ export default function AdminUsers() {
   const [users, setUsers] = useState([]);
   const [newUser, setNewUser] = useState({ email: '', password: '', role: 'employee' });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const token = localStorage.getItem('accessToken');
 
   // Проверка прав админа
   useEffect(() => {
@@ -17,37 +17,32 @@ export default function AdminUsers() {
     }
   }, [navigate]);
 
-  // Загрузка списка пользователей
+  // Загрузка пользователей
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const token = localStorage.getItem('accessToken');
         const res = await fetch('http://localhost:8000/api/users/', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
           const data = await res.json();
           setUsers(data);
-        } else {
-          setError('Не удалось загрузить пользователей');
         }
       } catch (err) {
-        setError('Ошибка подключения к серверу');
+        console.error('Ошибка:', err);
       } finally {
         setLoading(false);
       }
     };
     fetchUsers();
-  }, []);
+  }, [token]);
 
-  // Создание нового пользователя
   const handleCreateUser = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('accessToken');
       const res = await fetch('http://localhost:8000/api/users/', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
@@ -60,18 +55,16 @@ export default function AdminUsers() {
         alert('Пользователь создан');
       } else {
         const err = await res.json();
-        alert(err.error || 'Ошибка создания');
+        alert(err.error || 'Ошибка');
       }
     } catch (err) {
-      alert('Не удалось создать пользователя');
+      alert('Ошибка сети');
     }
   };
 
-  // Изменение роли
   const handleToggleRole = async (id, currentRole) => {
     const newRole = currentRole === 'admin' ? 'employee' : 'admin';
     try {
-      const token = localStorage.getItem('accessToken');
       const res = await fetch(`http://localhost:8000/api/users/${id}/`, {
         method: 'PATCH',
         headers: {
@@ -82,24 +75,21 @@ export default function AdminUsers() {
       });
       if (res.ok) {
         setUsers(users.map(u => u.id === id ? { ...u, role: newRole } : u));
-      } else {
-        alert('Не удалось изменить роль');
       }
     } catch (err) {
-      alert('Ошибка сети');
+      alert('Ошибка');
     }
   };
 
-  if (loading) return <div>Загрузка...</div>;
-  if (error) return <div style={{ color: 'red' }}>{error}</div>;
+  if (loading) return <div style={{ padding: '20px', textAlign: 'center' }}>Загрузка...</div>;
 
   return (
-    <div style={{ padding: '20px', maxWidth: '900px', margin: '0 auto' }}>
-      <h2>Управление пользователями</h2>
-      
+    <div style={{ padding: '20px', maxWidth: '900px', margin: '0 auto', fontFamily: 'Segoe UI, sans-serif' }}>
+      <h2 style={{ color: '#333' }}>Управление пользователями</h2>
+
       {/* Форма создания */}
-      <div style={{ backgroundColor: '#f8f9fa', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
-        <h3>Добавить пользователя</h3>
+      <div style={{ backgroundColor: '#f8f9fa', padding: '16px', borderRadius: '8px', marginBottom: '24px', border: '1px solid #e9ecef' }}>
+        <h3 style={{ margin: '0 0 12px 0' }}>Добавить пользователя</h3>
         <form onSubmit={handleCreateUser}>
           <input
             type="email"
@@ -107,7 +97,7 @@ export default function AdminUsers() {
             value={newUser.email}
             onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
             required
-            style={{ width: '100%', padding: '6px', marginBottom: '10px' }}
+            style={{ width: '100%', padding: '10px', marginBottom: '12px', border: '1px solid #ccc', borderRadius: '4px' }}
           />
           <input
             type="password"
@@ -115,12 +105,12 @@ export default function AdminUsers() {
             value={newUser.password}
             onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
             required
-            style={{ width: '100%', padding: '6px', marginBottom: '10px' }}
+            style={{ width: '100%', padding: '10px', marginBottom: '12px', border: '1px solid #ccc', borderRadius: '4px' }}
           />
           <select
             value={newUser.role}
             onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
-            style={{ width: '100%', padding: '6px', marginBottom: '10px' }}
+            style={{ width: '100%', padding: '10px', marginBottom: '12px', border: '1px solid #ccc', borderRadius: '4px' }}
           >
             <option value="employee">Сотрудник</option>
             <option value="admin">Администратор</option>
@@ -128,8 +118,8 @@ export default function AdminUsers() {
           <button
             type="submit"
             style={{
-              padding: '8px 16px',
-              backgroundColor: '#17a2b8',
+              padding: '10px 20px',
+              backgroundColor: '#17a745',
               color: 'white',
               border: 'none',
               borderRadius: '4px',
@@ -141,55 +131,64 @@ export default function AdminUsers() {
         </form>
       </div>
 
-      {/* Таблица пользователей */}
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr style={{ backgroundColor: '#343a40', color: 'white' }}>
-            <th style={{ padding: '10px', textAlign: 'left' }}>Email</th>
-            <th style={{ padding: '10px', textAlign: 'left' }}>Роль</th>
-            <th style={{ padding: '10px', textAlign: 'left' }}>Действия</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map(user => (
-            <tr key={user.id} style={{ borderBottom: '1px solid #ddd' }}>
-              <td style={{ padding: '10px' }}>{user.email}</td>
-              <td style={{ padding: '10px' }}>
-                {user.role === 'admin' ? 'Администратор' : 'Сотрудник'}
-              </td>
-              <td style={{ padding: '10px' }}>
-                <button
-                  onClick={() => handleToggleRole(user.id, user.role)}
-                  style={{
-                    padding: '4px 8px',
-                    backgroundColor: user.role === 'admin' ? '#ffc107' : '#28a745',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  {user.role === 'admin' ? 'Сделать сотрудником' : 'Сделать админом'}
-                </button>
-              </td>
+      {/* Таблица */}
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+          <thead>
+            <tr style={{ backgroundColor: '#343a40', color: 'white' }}>
+              <th style={{ padding: '12px', textAlign: 'left' }}>Email</th>
+              <th style={{ padding: '12px', textAlign: 'left' }}>Роль</th>
+              <th style={{ padding: '12px', textAlign: 'left' }}>Действия</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {users.map(user => (
+              <tr key={user.id} style={{ borderBottom: '1px solid #dee2e6' }}>
+                <td style={{ padding: '12px' }}>{user.email}</td>
+                <td style={{ padding: '12px' }}>
+                  <span style={{
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    backgroundColor: user.role === 'admin' ? '#e9ecef' : '#d1ecf1',
+                    color: user.role === 'admin' ? '#495057' : '#0c5460'
+                  }}>
+                    {user.role === 'admin' ? 'Админ' : 'Сотрудник'}
+                  </span>
+                </td>
+                <td style={{ padding: '12px' }}>
+                  <button
+                    onClick={() => handleToggleRole(user.id, user.role)}
+                    style={{
+                      padding: '4px 8px',
+                      backgroundColor: user.role === 'admin' ? '#ffc107' : '#28a745',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {user.role === 'admin' ? '→ Сотрудник' : '→ Админ'}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-      {/* Кнопка выхода */}
       <button
         onClick={() => {
           localStorage.clear();
           navigate('/login');
         }}
-        style={{ 
-          marginTop: '20px', 
-          padding: '8px 16px', 
-          backgroundColor: '#dc3545', 
-          color: 'white', 
-          border: 'none', 
-          borderRadius: '4px' 
+        style={{
+          marginTop: '24px',
+          padding: '10px 20px',
+          backgroundColor: '#dc3545',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer'
         }}
       >
         Выйти

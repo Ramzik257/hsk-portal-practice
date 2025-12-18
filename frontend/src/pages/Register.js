@@ -11,78 +11,88 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-
-    if (!email || !password) {
-      setError('Email и пароль обязательны');
-      return;
-    }
-
     try {
       const response = await fetch('http://localhost:8000/api/register/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
-
       const data = await response.json();
-
       if (response.ok) {
-        // Сохраняем ВСЁ, включая токен
         localStorage.setItem('isAuthenticated', 'true');
         localStorage.setItem('userRole', data.user.role);
-        localStorage.setItem('accessToken', data.access); // ← КЛЮЧЕВАЯ СТРОКА
-        alert('Регистрация успешна! Добро пожаловать.');
+        localStorage.setItem('accessToken', data.access);
+        alert('Регистрация успешна!');
         navigate('/tasks');
       } else {
         setError(data.error || 'Ошибка регистрации');
       }
     } catch (err) {
       setError('Не удалось подключиться к серверу');
-      console.error('Ошибка регистрации:', err);
     }
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '50px auto', padding: '20px' }}>
-      <h2>Регистрация</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+    <div style={{ maxWidth: '450px', margin: '60px auto', padding: '30px', fontFamily: 'Segoe UI, sans-serif', border: '1px solid #ddd', borderRadius: '10px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+      <h2 style={{ textAlign: 'center', color: '#333', marginBottom: '24px' }}>Регистрация</h2>
+      {error && <p style={{ color: 'red', textAlign: 'center', marginBottom: '16px' }}>{error}</p>}
       <form onSubmit={handleSubmit}>
-        <div>
-          <label>Email:</label>
+        <div style={{ marginBottom: '16px' }}>
           <input
             type="email"
+            placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            style={{ width: '100%', padding: '8px', margin: '5px 0' }}
+            style={{
+              width: '100%',
+              padding: '12px',
+              border: '1px solid #ccc',
+              borderRadius: '6px',
+              fontSize: '16px',
+              boxSizing: 'border-box'  // ← Исправлено!
+            }}
           />
         </div>
-        <div>
-          <label>Пароль:</label>
+        <div style={{ marginBottom: '24px' }}>
           <input
             type="password"
+            placeholder="Пароль"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            style={{ width: '100%', padding: '8px', margin: '5px 0' }}
+            style={{
+              width: '100%',
+              padding: '12px',
+              border: '1px solid #ccc',
+              borderRadius: '6px',
+              fontSize: '16px',
+              boxSizing: 'border-box'  // ← Исправлено!
+            }}
           />
         </div>
         <button
           type="submit"
           style={{
             width: '100%',
-            padding: '10px',
+            padding: '12px',
             backgroundColor: '#28a745',
             color: 'white',
             border: 'none',
+            borderRadius: '6px',
+            fontSize: '16px',
             cursor: 'pointer',
+            boxSizing: 'border-box'  // ← Исправлено!
           }}
         >
           Зарегистрироваться
         </button>
       </form>
-      <p style={{ marginTop: '15px', textAlign: 'center' }}>
-        Уже есть аккаунт? <Link to="/login">Войти</Link>
+      <p style={{ textAlign: 'center', marginTop: '20px' }}>
+        Уже есть аккаунт?{' '}
+        <Link to="/login" style={{ color: '#007bff', textDecoration: 'none' }}>
+          Войти
+        </Link>
       </p>
     </div>
   );

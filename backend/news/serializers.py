@@ -4,6 +4,8 @@ from rest_framework import serializers
 from .models import News
 
 class NewsSerializer(serializers.ModelSerializer):
+    author_email = serializers.ReadOnlyField(source='author.email')
+
     class Meta:
         model = News
         fields = '__all__'
